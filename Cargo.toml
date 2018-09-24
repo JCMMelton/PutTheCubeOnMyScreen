@@ -1,0 +1,13 @@
+[package]
+name = "ogl1"
+version = "0.1.0"
+authors = ["Joseph Melton <jcmmelton@gmail.com>"]
+
+[dependencies]
+glium = "*"
+piston = "*"
+pistoncore-glutin_window = "*"
+shader_version = "*"
+glutin = "*"
+gl = "*"
+nalgebra = "0.16"
