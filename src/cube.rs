@@ -1,15 +1,20 @@
 
+extern crate glium;
 extern crate nalgebra as na;
 
-use na::{Matrix4, geometry, Vector3, Isometry3, Point3, Perspective3};
+use glium::*;
+use na::{Matrix4, Vector3};
+use vertex::Vertex;
 
 pub struct Cube {
-    location: Vector3,
-    rotation: Matrix4,
+    location: Vector3<f32>,
+    rotation: Matrix4<f32>,
+    vertex_buffer: VertexBuffer<Vertex>
 }
 
 impl Cube {
-    pub fn new(location: Vector3) -> Self {
+    pub fn new(location: Vector3<f32>, display: &backend::Facade) -> Self {
+        let shape: Vec<Vertex> = get_cube_verts();
         Cube {
             location,
             rotation:     Matrix4::new(
@@ -17,7 +22,8 @@ impl Cube {
                 0.0, 1.0, 0.0, 0.0,
                 0.0, 0.0, 1.0, 0.0,
                 0.0, 0.0, 0.0, 1.0
-            )
+            ),
+            vertex_buffer: glium::VertexBuffer::new(display, &shape).unwrap()
         }
     }
     pub fn rotate(&mut self, x: f32, y: f32, z: f32) {
@@ -27,7 +33,7 @@ impl Cube {
             let sy = f32::sin(y);
             let cz = f32::cos(z);
             let sz = f32::sin(z);
-            self::rotation = Matrix4::new(
+            self.rotation = Matrix4::new(
                 1.0, 0.0, 0.0, 0.0,
                 0.0,  cx, -sx, 0.0,
                 0.0,  sx,  cx, 0.0,
@@ -47,4 +53,72 @@ impl Cube {
             )
 
     }
+}
+
+fn get_cube_verts() -> Vec<Vertex> {
+    let nz: f32 = -1.0;
+    let pz: f32 =  1.0;
+    let x:  f32 =  1.0;
+    let y:  f32 =  1.0;
+    vec![
+        //1
+        Vertex::new(-x, -y, nz),
+        Vertex::new(-x, -y, pz),
+        Vertex::new(-x,  y, pz),
+
+        //2
+        Vertex::new( x,  y, nz),
+        Vertex::new(-x, -y, nz),
+        Vertex::new(-x,  y, nz),
+
+        //3
+        Vertex::new( x, -y, pz),
+        Vertex::new(-x, -y, nz),
+        Vertex::new( x, -y, nz),
+
+        //4
+        Vertex::new( x,  y, nz),
+        Vertex::new( x, -y, nz),
+        Vertex::new(-x, -y, nz),
+
+        //5
+        Vertex::new(-x, -y, nz),
+        Vertex::new(-x,  y, pz),
+        Vertex::new(-x,  y, nz),
+
+        //6
+        Vertex::new( x, -y, pz),
+        Vertex::new(-x, -y, pz),
+        Vertex::new(-x, -y, nz),
+
+        //7
+        Vertex::new(-x,  y, pz),
+        Vertex::new(-x, -y, pz),
+        Vertex::new( x, -y, pz),
+
+        //8
+        Vertex::new(x,  y, pz),
+        Vertex::new(x, -y, nz),
+        Vertex::new(x,  y, nz),
+
+        //9
+        Vertex::new(x, -y, nz),
+        Vertex::new(x,  y, pz),
+        Vertex::new(x, -y, pz),
+
+        //10
+        Vertex::new( x, y, pz),
+        Vertex::new( x, y, nz),
+        Vertex::new(-x, y, nz),
+
+        //11
+        Vertex::new( x, y, pz),
+        Vertex::new(-x, y, nz),
+        Vertex::new(-x, y, pz),
+
+        //12
+        Vertex::new( x,  y, pz),
+        Vertex::new(-x,  y, pz),
+        Vertex::new( x, -y, pz)
+    ]
 }

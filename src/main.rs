@@ -6,23 +6,16 @@ extern crate glutin_window;
 extern crate gl;
 extern crate nalgebra as na;
 
+
+mod vertex;
+mod cube;
+
 use glium::*;
 use na::{Matrix4, geometry, Vector3, Isometry3, Point3, Perspective3};
 use std::f32;
+use vertex::Vertex;
+use cube::*;
 
-#[derive(Copy, Clone)]
-pub struct Vertex {
-    position: (f32, f32, f32)
-}
-impl Vertex {
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Vertex {
-            position: (x, y, z)
-        }
-    }
-}
-
-implement_vertex!(Vertex, position);
 
 fn main() {
     use glium::{glutin, Surface};
@@ -33,7 +26,9 @@ fn main() {
     let context = glutin::ContextBuilder::new();
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
 
-    let shape: Vec<Vertex> = cube();
+    let cubes: Vec<Cube> = Vec::new();
+
+    let shape: Vec<Vertex> = cube_verts();
 
     let blank_buffer: [f32; 128] = [0.0; 128];
     let color_buffer = glium::buffer::Buffer::new(&display, &blank_buffer, glium::buffer::BufferType::UniformBuffer, glium::buffer::BufferMode::Dynamic).unwrap();
@@ -146,7 +141,7 @@ fn na4_to_gl4(mat: &Matrix4<f32>) -> [[f32; 4]; 4] {
     ]
 }
 
-fn cube() -> Vec<Vertex> {
+fn cube_verts() -> Vec<Vertex> {
     let nz: f32 = -1.0;
     let pz: f32 =  1.0;
     let x:  f32 =  1.0;
