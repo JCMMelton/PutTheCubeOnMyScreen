@@ -3,13 +3,14 @@ extern crate glium;
 extern crate nalgebra as na;
 
 use glium::*;
-use na::{Matrix4, Vector3};
+use na::{Matrix4, Vector3, geometry};
 use vertex::Vertex;
 
 pub struct Cube {
     location: Vector3<f32>,
     rotation: Matrix4<f32>,
-    vertex_buffer: VertexBuffer<Vertex>
+    vertex_buffer: VertexBuffer<Vertex>,
+    translation: geometry::Translation3<f32>
 }
 
 impl Cube {
@@ -23,7 +24,8 @@ impl Cube {
                 0.0, 0.0, 1.0, 0.0,
                 0.0, 0.0, 0.0, 1.0
             ),
-            vertex_buffer: glium::VertexBuffer::new(display, &shape).unwrap()
+            vertex_buffer: glium::VertexBuffer::new(display, &shape).unwrap(),
+            translation: geometry::Translation3::from_vector(location)
         }
     }
     pub fn rotate(&mut self, x: f32, y: f32, z: f32) {
@@ -52,6 +54,14 @@ impl Cube {
                 0.0, 0.0, 0.0, 1.0
             )
 
+    }
+
+    pub fn get_location_transform(&self) -> &geometry::Translation3<f32> {
+        &self.translation
+    }
+
+    pub fn get_vert_buffer(&self) -> &glium::VertexBuffer<Vertex> {
+        &self.vertex_buffer
     }
 }
 

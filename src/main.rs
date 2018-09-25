@@ -26,7 +26,15 @@ fn main() {
     let context = glutin::ContextBuilder::new();
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
 
-    let cubes: Vec<Cube> = Vec::new();
+    let mut cubes: Vec<Cube> = Vec::new();
+    cubes.push(Cube::new(
+        Vector3::new(0.0, 10.0, -20.0),
+        &display
+    ));
+    cubes.push(Cube::new(
+        Vector3::new(10.0, 0.0, -20.0),
+        &display
+    ));
 
     let shape: Vec<Vertex> = cube_verts();
 
@@ -54,21 +62,23 @@ fn main() {
     let targ = Point3::new(0.0, 0.0, 0.0);
 
     while !closed {
-        let model: Matrix4<f32> = Isometry3::<f32>::new(Vector3::x(), na::zero()).to_homogeneous() * translation.to_homogeneous() * rotation;
-        let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
-        let projection: Perspective3<f32> = perspective3;
-        let mvp = projection.as_matrix() * view * model;
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
-        let transform: [[f32; 4]; 4] = na4_to_gl4(&mvp);
-        let uniforms = uniform!{
-            window_size: dimensions,
-            transform:   transform,
-            colors:      &color_buffer
-        };
 
-        target.draw(&vertex_buffer, &indices, &program, &uniforms, &Default::default()).unwrap();
+        for cube in cubes.iter() {
+            let model: Matrix4<f32> = Isometry3::<f32>::new(Vector3::x(), na::zero()).to_homogeneous() * cube.get_location_transform().to_homogeneous() * rotation;
+            let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
+            let projection: Perspective3<f32> = perspective3;
+            let mvp = projection.as_matrix() * view * model;
+            let transform: [[f32; 4]; 4] = na4_to_gl4(&mvp);
+            let uniforms = uniform!{
+                window_size: dimensions,
+                transform:   transform,
+                colors:      &color_buffer
+            };
+            target.draw(cube.get_vert_buffer(), &indices, &program, &uniforms, &Default::default()).unwrap();
+        }
         target.finish().unwrap();
 
         event_loop.poll_events(|event| {
