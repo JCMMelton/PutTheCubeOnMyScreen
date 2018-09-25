@@ -28,12 +28,12 @@ fn main() {
     let mut cubes: Vec<Cube> = Vec::new();
     cubes.push(Cube::new(
         CubeType::Block,
-        Vector3::new(-5.0, 0.0, -8.0),
+        Vector3::new(-5.0, 0.0, -10.0),
         &display
     ));
     cubes.push(Cube::new(
         CubeType::Light,
-        Vector3::new(0.0, 5.0, -20.0),
+        Vector3::new(0.0, 5.0, -8.0),
         &display
     ));
     let light_position: (f32, f32, f32) = (0.0, 5.0, -20.0);
@@ -51,28 +51,24 @@ fn main() {
     let light_fragment_shader_src = include_str!("../assets/light.frag");
     let light_program: Program = glium::Program::from_source(&display, light_vertex_shader_src, light_fragment_shader_src, None).unwrap();
 
-    let perspective3 = geometry::Perspective3::new(dimensions[0]/dimensions[1], f32::consts::PI/2.0, 1.0, 1000.0);
-    println!("{:?}", perspective3);
-
-    let translation = geometry::Translation3::new(0.0, 0.0, -20.0);
-    println!("{:?}", translation);
+    let projection = geometry::Perspective3::new(dimensions[0]/dimensions[1], f32::consts::PI/2.0, 1.0, 1000.0);
 
     let mut closed = false;
     let mut d: f32 = 0.001;
 
-    let eye  = Point3::new(0.0, 0.0, 1.0);
-    let targ = Point3::new(0.0, 0.0, 0.0);
+    let targ = Point3::new(0.0, 0.0, -1.0);
 
     let light_color:  [f32; 3] = [1.0, 1.0, 1.0];
     let object_color: [f32; 3] = [1.0, 0.5, 0.3];
 
     let params = glium::DrawParameters {
         depth: glium::Depth {
-            test: glium::DepthTest::IfMore,
+            test: glium::DepthTest::IfMoreOrEqual,
             write: true,
             .. Default::default()
         },
-        backface_culling: glium::BackfaceCullingMode::CullClockwise,
+        backface_culling: glium::BackfaceCullingMode::CullingDisabled,
+        // backface_culling: glium::BackfaceCullingMode::CullClockwise,
         .. Default::default()
     };
 
@@ -80,16 +76,28 @@ fn main() {
 
         let mut target = display.draw();
         target.clear_color(0.01, 0.01, 0.01, 1.0);
-        let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
-        let projection: Perspective3<f32> = perspective3;
 
-        for cube in cubes.iter_mut() {
-            cube.rotate(d, d/2.0, d/3.0);
+        let eye  = Point3::new(0.0, 0.0, 0.0);
+        let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
+
+        for cube in cubes.iter_mut() {            
+            // if cube.get_type() ==  {
+            //     cube.rotate(d, d/2.0, d/3.0);
+            // }
+            // match cube.get_type() {
+            //     CubeType::Block => {
+            //         cube.rotate(d, 0.0, 0.0);
+            //         println!("{:?}", cube.get_rotation());
+            //     },
+            //     _ => ()
+            // };
+                   
+            
             let uniforms = uniform!{
                 window_size: dimensions,
-                model: na4_to_gl4(&cube.get_model_transform()),
-                view: na4_to_gl4(&view),
-                projection: na4_to_gl4(&projection.as_matrix()),
+                model:       na4_to_gl4(&cube.get_model_transform()),
+                view:        na4_to_gl4(&view),
+                projection:  na4_to_gl4(&projection.as_matrix()),
                 colors:      &color_buffer,
                 lightColor:  light_color,
                 objectColor: object_color,
@@ -111,6 +119,9 @@ fn main() {
                         dimensions[0] = size.width  as f32;
                         dimensions[1] = size.height as f32;
                     },
+                    // glutin::WindowEvent::KeyboardInput{} => match event {
+                    //     _ => println!("{:?}", event)
+                    // }
                     _ => ()
                 },
                 _ => (),

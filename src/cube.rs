@@ -25,7 +25,7 @@ impl Cube {
         Cube {
             cube_type,
             location,
-            rotation:     Matrix4::new(
+            rotation: Matrix4::new(
                 1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,
                 0.0, 0.0, 1.0, 0.0,
@@ -104,6 +104,63 @@ fn get_normal(index: usize) -> (f32, f32, f32) {
 }
 
 fn get_cube_verts() -> Vec<Vertex> {
+    let nz: f32 = -1.0;
+    let pz: f32 =  1.0;
+    let x:  f32 =  1.0;
+    let y:  f32 =  1.0;
+
+    vec![
+        //1
+        Vertex::new(-x, -y, nz, get_normal(0)),
+        Vertex::new( x, -y, nz, get_normal(0)),
+        Vertex::new( x,  y, nz, get_normal(0)),
+        Vertex::new( x,  y, nz, get_normal(0)),
+        Vertex::new(-x,  y, nz, get_normal(0)),
+        Vertex::new(-x, -y, nz, get_normal(0)),
+
+        //3
+        Vertex::new(-x, -y, pz, get_normal(1)),
+        Vertex::new( x, -y, pz, get_normal(1)),
+        Vertex::new( x,  y, pz, get_normal(1)),
+        Vertex::new( x,  y, pz, get_normal(1)),
+        Vertex::new(-x,  y, pz, get_normal(1)),
+        Vertex::new(-x, -y, pz, get_normal(1)),
+
+        //5
+        Vertex::new(-x,  y, pz, get_normal(2)),
+        Vertex::new(-x,  y, nz, get_normal(2)),
+        Vertex::new(-x, -y, nz, get_normal(2)),
+        Vertex::new(-x, -y, nz, get_normal(2)),
+        Vertex::new(-x, -y, pz, get_normal(2)),
+        Vertex::new(-x,  y, pz, get_normal(2)),
+
+        //7
+        Vertex::new( x,  y, pz, get_normal(3)),
+        Vertex::new( x,  y, nz, get_normal(3)),
+        Vertex::new( x, -y, nz, get_normal(3)),
+        Vertex::new( x, -y, nz, get_normal(3)),
+        Vertex::new( x, -y, pz, get_normal(3)),
+        Vertex::new( x,  y, pz, get_normal(3)),
+
+        //9
+        Vertex::new(-x, -y, nz, get_normal(4)),
+        Vertex::new( x, -y, nz, get_normal(4)),
+        Vertex::new( x, -y, pz, get_normal(4)),
+        Vertex::new( x, -y, pz, get_normal(4)),
+        Vertex::new(-x, -y, pz, get_normal(4)),
+        Vertex::new(-x, -y, nz, get_normal(4)),
+
+        //11
+        Vertex::new(-x,  y, nz, get_normal(5)),
+        Vertex::new( x,  y, nz, get_normal(5)),
+        Vertex::new( x,  y, pz, get_normal(5)),
+        Vertex::new( x,  y, pz, get_normal(5)),
+        Vertex::new(-x,  y, pz, get_normal(5)),
+        Vertex::new(-x,  y, nz, get_normal(5))
+    ]
+}
+
+fn get_cube_verts_old() -> Vec<Vertex> {
     let nz: f32 = -1.0;
     let pz: f32 =  1.0;
     let x:  f32 =  1.0;
