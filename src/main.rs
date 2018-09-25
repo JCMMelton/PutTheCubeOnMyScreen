@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate glium;
-extern crate piston;
 extern crate shader_version;
 extern crate glutin_window;
 extern crate gl;
@@ -28,27 +27,30 @@ fn main() {
 
     let mut cubes: Vec<Cube> = Vec::new();
     cubes.push(Cube::new(
-        Vector3::new(0.0, 10.0, -20.0),
+        CubeType::Block,
+        Vector3::new(-5.0, 0.0, -8.0),
         &display
     ));
     cubes.push(Cube::new(
-        Vector3::new(10.0, 0.0, -20.0),
+        CubeType::Light,
+        Vector3::new(0.0, 5.0, -20.0),
         &display
     ));
-
-    let shape: Vec<Vertex> = cube_verts();
+    let light_position: (f32, f32, f32) = (0.0, 5.0, -20.0);
 
     let blank_buffer: [f32; 128] = [0.0; 128];
     let color_buffer = glium::buffer::Buffer::new(&display, &blank_buffer, glium::buffer::BufferType::UniformBuffer, glium::buffer::BufferMode::Dynamic).unwrap();
    color_buffer.write(&cube_colors());
-    let vertex_buffer: VertexBuffer<Vertex> = glium::VertexBuffer::new(&display, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
-    let vertex_shader_src   = include_str!("../assets/basic.vert");
-    let fragment_shader_src = include_str!("../assets/basic.frag");
-    let program: Program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
+    let block_vertex_shader_src   = include_str!("../assets/block.vert");
+    let block_fragment_shader_src = include_str!("../assets/block.frag");
+    let block_program: Program = glium::Program::from_source(&display, block_vertex_shader_src, block_fragment_shader_src, None).unwrap();
 
-    let mut rotation = geometry::Rotation::from_matrix_unchecked( get_identity_matrix() );
+    let light_vertex_shader_src   = include_str!("../assets/light.vert");
+    let light_fragment_shader_src = include_str!("../assets/light.frag");
+    let light_program: Program = glium::Program::from_source(&display, light_vertex_shader_src, light_fragment_shader_src, None).unwrap();
+
     let perspective3 = geometry::Perspective3::new(dimensions[0]/dimensions[1], f32::consts::PI/2.0, 1.0, 1000.0);
     println!("{:?}", perspective3);
 
@@ -61,23 +63,43 @@ fn main() {
     let eye  = Point3::new(0.0, 0.0, 1.0);
     let targ = Point3::new(0.0, 0.0, 0.0);
 
+    let light_color:  [f32; 3] = [1.0, 1.0, 1.0];
+    let object_color: [f32; 3] = [1.0, 0.5, 0.3];
+
+    let params = glium::DrawParameters {
+        depth: glium::Depth {
+            test: glium::DepthTest::IfMore,
+            write: true,
+            .. Default::default()
+        },
+        backface_culling: glium::BackfaceCullingMode::CullClockwise,
+        .. Default::default()
+    };
+
     while !closed {
 
         let mut target = display.draw();
-        target.clear_color(0.0, 0.0, 0.0, 1.0);
+        target.clear_color(0.01, 0.01, 0.01, 1.0);
+        let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
+        let projection: Perspective3<f32> = perspective3;
 
-        for cube in cubes.iter() {
-            let model: Matrix4<f32> = Isometry3::<f32>::new(Vector3::x(), na::zero()).to_homogeneous() * cube.get_location_transform().to_homogeneous() * rotation;
-            let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
-            let projection: Perspective3<f32> = perspective3;
-            let mvp = projection.as_matrix() * view * model;
-            let transform: [[f32; 4]; 4] = na4_to_gl4(&mvp);
+        for cube in cubes.iter_mut() {
+            cube.rotate(d, d/2.0, d/3.0);
             let uniforms = uniform!{
                 window_size: dimensions,
-                transform:   transform,
-                colors:      &color_buffer
+                model: na4_to_gl4(&cube.get_model_transform()),
+                view: na4_to_gl4(&view),
+                projection: na4_to_gl4(&projection.as_matrix()),
+                colors:      &color_buffer,
+                lightColor:  light_color,
+                objectColor: object_color,
+                lightPos:    light_position,
             };
-            target.draw(cube.get_vert_buffer(), &indices, &program, &uniforms, &Default::default()).unwrap();
+            let program = match cube.get_type() {
+                &CubeType::Block => &block_program,
+                &CubeType::Light => &light_program
+            };
+            target.draw(cube.get_vert_buffer(), &indices, program, &uniforms, &params).unwrap();
         }
         target.finish().unwrap();
 
@@ -94,53 +116,52 @@ fn main() {
                 _ => (),
             }
         });
-        d += 0.01;
-        rotation = geometry::Rotation::from_matrix_unchecked(get_z_rot(d) * get_x_rot(d) * get_y_rot(d) );
+        d += 0.001;
     }
 
 }
 
-fn get_x_rot(d: f32) -> Matrix4<f32> {
-    let cd = f32::cos(d);
-    let sd = f32::sin(d);
-    Matrix4::new(
-        1.0, 0.0, 0.0, 0.0,
-        0.0,  cd, -sd, 0.0,
-        0.0,  sd,  cd, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    )
-}
+// fn get_x_rot(d: f32) -> Matrix4<f32> {
+//     let cd = f32::cos(d);
+//     let sd = f32::sin(d);
+//     Matrix4::new(
+//         1.0, 0.0, 0.0, 0.0,
+//         0.0,  cd, -sd, 0.0,
+//         0.0,  sd,  cd, 0.0,
+//         0.0, 0.0, 0.0, 1.0
+//     )
+// }
 
-fn get_y_rot(d: f32) -> Matrix4<f32> {
-    let cd = f32::cos(d);
-    let sd = f32::sin(d);
-    Matrix4::new(
-         cd, 0.0,  sd, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        -sd, 0.0,  cd, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    )
-}
+// fn get_y_rot(d: f32) -> Matrix4<f32> {
+//     let cd = f32::cos(d);
+//     let sd = f32::sin(d);
+//     Matrix4::new(
+//          cd, 0.0,  sd, 0.0,
+//         0.0, 1.0, 0.0, 0.0,
+//         -sd, 0.0,  cd, 0.0,
+//         0.0, 0.0, 0.0, 1.0
+//     )
+// }
 
-fn get_z_rot(d: f32) -> Matrix4<f32> {
-    let cd = f32::cos(d);
-    let sd = f32::sin(d);
-    Matrix4::new(
-         cd, -sd, 0.0, 0.0,
-         sd,  cd, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    )
-}
+// fn get_z_rot(d: f32) -> Matrix4<f32> {
+//     let cd = f32::cos(d);
+//     let sd = f32::sin(d);
+//     Matrix4::new(
+//          cd, -sd, 0.0, 0.0,
+//          sd,  cd, 0.0, 0.0,
+//         0.0, 0.0, 1.0, 0.0,
+//         0.0, 0.0, 0.0, 1.0
+//     )
+// }
 
-fn get_identity_matrix() -> Matrix4<f32> {
-    Matrix4::new(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    )
-}
+// fn get_identity_matrix() -> Matrix4<f32> {
+//     Matrix4::new(
+//         1.0, 0.0, 0.0, 0.0,
+//         0.0, 1.0, 0.0, 0.0,
+//         0.0, 0.0, 1.0, 0.0,
+//         0.0, 0.0, 0.0, 1.0
+//     )
+// }
  
 fn na4_to_gl4(mat: &Matrix4<f32>) -> [[f32; 4]; 4] {
     [
@@ -148,74 +169,6 @@ fn na4_to_gl4(mat: &Matrix4<f32>) -> [[f32; 4]; 4] {
         [mat[4],  mat[5],  mat[6],  mat[7]],
         [mat[8],  mat[9],  mat[10], mat[11]],
         [mat[12], mat[13], mat[14], mat[15]],
-    ]
-}
-
-fn cube_verts() -> Vec<Vertex> {
-    let nz: f32 = -1.0;
-    let pz: f32 =  1.0;
-    let x:  f32 =  1.0;
-    let y:  f32 =  1.0;
-    vec![
-        //1
-        Vertex::new(-x, -y, nz),
-        Vertex::new(-x, -y, pz),
-        Vertex::new(-x,  y, pz),
-
-        //2
-        Vertex::new( x,  y, nz),
-        Vertex::new(-x, -y, nz),
-        Vertex::new(-x,  y, nz),
-
-        //3
-        Vertex::new( x, -y, pz),
-        Vertex::new(-x, -y, nz),
-        Vertex::new( x, -y, nz),
-
-        //4
-        Vertex::new( x,  y, nz),
-        Vertex::new( x, -y, nz),
-        Vertex::new(-x, -y, nz),
-
-        //5
-        Vertex::new(-x, -y, nz),
-        Vertex::new(-x,  y, pz),
-        Vertex::new(-x,  y, nz),
-
-        //6
-        Vertex::new( x, -y, pz),
-        Vertex::new(-x, -y, pz),
-        Vertex::new(-x, -y, nz),
-
-        //7
-        Vertex::new(-x,  y, pz),
-        Vertex::new(-x, -y, pz),
-        Vertex::new( x, -y, pz),
-
-        //8
-        Vertex::new(x,  y, pz),
-        Vertex::new(x, -y, nz),
-        Vertex::new(x,  y, nz),
-
-        //9
-        Vertex::new(x, -y, nz),
-        Vertex::new(x,  y, pz),
-        Vertex::new(x, -y, pz),
-
-        //10
-        Vertex::new( x, y, pz),
-        Vertex::new( x, y, nz),
-        Vertex::new(-x, y, nz),
-
-        //11
-        Vertex::new( x, y, pz),
-        Vertex::new(-x, y, nz),
-        Vertex::new(-x, y, pz),
-
-        //12
-        Vertex::new( x,  y, pz),
-        Vertex::new(-x,  y, pz),
-        Vertex::new( x, -y, pz)
     ]
 }
 
