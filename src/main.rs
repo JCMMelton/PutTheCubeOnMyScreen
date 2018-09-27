@@ -38,9 +38,6 @@ fn main() {
         &display
     ));
 
-    let blank_buffer: [f32; 128] = [0.0; 128];
-    let color_buffer = glium::buffer::Buffer::new(&display, &blank_buffer, glium::buffer::BufferType::UniformBuffer, glium::buffer::BufferMode::Dynamic).unwrap();
-   color_buffer.write(&cube_colors());
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
     let block_vertex_shader_src   = include_str!("../assets/block.vert");
@@ -56,7 +53,8 @@ fn main() {
     let mut closed = false;
     let mut d: f32 = 0.001;
 
-    let targ = Point3::new(0.0, 0.0, 1.0);
+    let mut targ = Point3::new(0.0, 0.0, 1.0);
+    let mut eye  = Point3::new(0.0, 0.0, 0.0);
 
     let light_color:  [f32; 3] = [1.0, 1.0, 1.0];
     let object_color: [f32; 3] = [1.0, 0.5, 0.3];
@@ -69,17 +67,17 @@ fn main() {
             .. Default::default()
         },
 //         backface_culling: glium::BackfaceCullingMode::CullingDisabled,
-//         backface_culling: glium::BackfaceCullingMode::CullClockwise,
+        // backface_culling: glium::BackfaceCullingMode::CullClockwise,
          // backface_culling: glium::BackfaceCullingMode::CullCounterClockwise,
         .. Default::default()
     };
     let mut rotate_cubes: bool = false;
+
     while !closed {
 
         let mut target = display.draw();
         target.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
 
-        let eye  = Point3::new(f32::cos(d)*0.1, f32::sin(d)*0.1, 0.0);
         let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
 
         for cube in cubes.iter_mut() {
@@ -98,7 +96,6 @@ fn main() {
                 model:       na4_to_gl4(&cube.get_model_transform()),
                 view:        na4_to_gl4(&view),
                 projection:  na4_to_gl4(&projection.as_matrix()),
-                colors:      &color_buffer,
                 lightColor:  light_color,
                 objectColor: object_color,
                 lightPos:    light_position,
@@ -119,8 +116,11 @@ fn main() {
                         dimensions[0] = size.width  as f32;
                         dimensions[1] = size.height as f32;
                     },
-                     glutin::WindowEvent::KeyboardInput{device_id, input} => match input.scancode {
-                         19 => { rotate_cubes = !rotate_cubes; },
+                     glutin::WindowEvent::KeyboardInput{device_id, input} => match input.virtual_keycode {
+                        W => { eye.z += 0.1; targ.z += 0.1; },
+                        S => { eye.z -= 0.1; targ.z -= 0.1; },
+                        D => { eye.x -= 0.1; targ.x -= 0.1; },
+                        A => { eye.x += 0.1; targ.x += 0.1; },
                          _ => println!("{:?}", input)
                      }
                     _ => ()
@@ -181,67 +181,5 @@ fn na4_to_gl4(mat: &Matrix4<f32>) -> [[f32; 4]; 4] {
         [mat[4],  mat[5],  mat[6],  mat[7]],
         [mat[8],  mat[9],  mat[10], mat[11]],
         [mat[12], mat[13], mat[14], mat[15]],
-    ]
-}
-
-fn cube_colors() -> [f32; 128] {
-    [
-        1.0, 0.5, 0.5,
-        0.5, 0.1, 0.5,
-        0.5, 0.5, 1.0,
-
-        0.5, 1.0, 0.5,
-        1.0, 0.5, 0.5,
-        0.5, 1.0, 0.5,
-
-        0.5, 0.5, 1.0,
-        0.5, 1.0, 0.5,
-        1.0, 0.5, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-        0.0, 1.0, 0.5,
-
-        0.5, 0.5
     ]
 }
