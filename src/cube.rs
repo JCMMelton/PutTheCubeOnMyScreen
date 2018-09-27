@@ -130,21 +130,21 @@ fn get_cube_verts() -> Vec<Vertex> {
 
         //right side
 
-//        Vertex::new(-x,  y, pz, get_normal(2)),
-//        Vertex::new(-x,  y, nz, get_normal(2)),
-//        Vertex::new(-x, -y, nz, get_normal(2)),
-//        Vertex::new(-x, -y, nz, get_normal(2)),
-//        Vertex::new(-x, -y, pz, get_normal(2)),
-//        Vertex::new(-x,  y, pz, get_normal(2)),
+       Vertex::new(-x,  y, pz, get_normal(2)),
+       Vertex::new(-x,  y, nz, get_normal(2)),
+       Vertex::new(-x, -y, nz, get_normal(2)),
+       Vertex::new(-x, -y, nz, get_normal(2)),
+       Vertex::new(-x, -y, pz, get_normal(2)),
+       Vertex::new(-x,  y, pz, get_normal(2)),
 
         // left side
 
-//        Vertex::new( x,  y, pz, get_normal(3)),
-//        Vertex::new( x,  y, nz, get_normal(3)),
-//        Vertex::new( x, -y, nz, get_normal(3)),
-//        Vertex::new( x, -y, nz, get_normal(3)),
-//        Vertex::new( x, -y, pz, get_normal(3)),
-//        Vertex::new( x,  y, pz, get_normal(3)),
+       Vertex::new( x,  y, pz, get_normal(3)),
+       Vertex::new( x,  y, nz, get_normal(3)),
+       Vertex::new( x, -y, nz, get_normal(3)),
+       Vertex::new( x, -y, nz, get_normal(3)),
+       Vertex::new( x, -y, pz, get_normal(3)),
+       Vertex::new( x,  y, pz, get_normal(3)),
 
         // top
 

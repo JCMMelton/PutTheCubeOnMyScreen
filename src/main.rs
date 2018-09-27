@@ -25,7 +25,7 @@ fn main() {
     let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
 
-    let light_position: (f32, f32, f32) = (0.0, 5.0, 18.0);
+    let light_position: (f32, f32, f32) = (-5.0, 0.0, 18.0);
     let mut cubes: Vec<Cube> = Vec::new();
     cubes.push(Cube::new(
         CubeType::Block,
@@ -63,21 +63,21 @@ fn main() {
 
     let params = glium::DrawParameters {
         depth: glium::Depth {
-            test: glium::DepthTest::IfLess,
-//            test: glium::DepthTest::IfMoreOrEqual,
+            test: glium::DepthTest::IfLessOrEqual,
+           // test: glium::DepthTest::IfMoreOrEqual,
             write: true,
             .. Default::default()
         },
 //         backface_culling: glium::BackfaceCullingMode::CullingDisabled,
 //         backface_culling: glium::BackfaceCullingMode::CullClockwise,
-         backface_culling: glium::BackfaceCullingMode::CullCounterClockwise,
+         // backface_culling: glium::BackfaceCullingMode::CullCounterClockwise,
         .. Default::default()
     };
     let mut rotate_cubes: bool = false;
     while !closed {
 
         let mut target = display.draw();
-        target.clear_color(0.01, 0.01, 0.01, 1.0);
+        target.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
 
         let eye  = Point3::new(f32::cos(d)*0.1, f32::sin(d)*0.1, 0.0);
         let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
@@ -128,7 +128,7 @@ fn main() {
                 _ => (),
             }
         });
-        d += 0.01;
+        d += 0.001;
     }
 
 }
