@@ -22,21 +22,21 @@ fn main() {
     let mut event_loop = glutin::EventsLoop::new();
     let mut window = glutin::WindowBuilder::new();
     window.window.dimensions = Some(glutin::dpi::LogicalSize::new(dimensions[0] as f64, dimensions[1] as f64));
-    let context = glutin::ContextBuilder::new();
+    let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
 
+    let light_position: (f32, f32, f32) = (0.0, 5.0, 18.0);
     let mut cubes: Vec<Cube> = Vec::new();
     cubes.push(Cube::new(
         CubeType::Block,
-        Vector3::new(-5.0, 0.0, -10.0),
+        Vector3::new(5.0, 0.0, 10.0),
         &display
     ));
     cubes.push(Cube::new(
         CubeType::Light,
-        Vector3::new(0.0, 5.0, -8.0),
+        Vector3::new(light_position.0, light_position.1, light_position.2),
         &display
     ));
-    let light_position: (f32, f32, f32) = (0.0, 5.0, -20.0);
 
     let blank_buffer: [f32; 128] = [0.0; 128];
     let color_buffer = glium::buffer::Buffer::new(&display, &blank_buffer, glium::buffer::BufferType::UniformBuffer, glium::buffer::BufferMode::Dynamic).unwrap();
@@ -51,47 +51,47 @@ fn main() {
     let light_fragment_shader_src = include_str!("../assets/light.frag");
     let light_program: Program = glium::Program::from_source(&display, light_vertex_shader_src, light_fragment_shader_src, None).unwrap();
 
-    let projection = geometry::Perspective3::new(dimensions[0]/dimensions[1], f32::consts::PI/2.0, 1.0, 1000.0);
+    let projection = geometry::Perspective3::new(dimensions[0]/dimensions[1], f32::consts::PI/2.0, 0.1, 1000.0);
 
     let mut closed = false;
     let mut d: f32 = 0.001;
 
-    let targ = Point3::new(0.0, 0.0, -1.0);
+    let targ = Point3::new(0.0, 0.0, 1.0);
 
     let light_color:  [f32; 3] = [1.0, 1.0, 1.0];
     let object_color: [f32; 3] = [1.0, 0.5, 0.3];
 
     let params = glium::DrawParameters {
         depth: glium::Depth {
-            test: glium::DepthTest::IfMoreOrEqual,
+            test: glium::DepthTest::IfLess,
+//            test: glium::DepthTest::IfMoreOrEqual,
             write: true,
             .. Default::default()
         },
-        backface_culling: glium::BackfaceCullingMode::CullingDisabled,
-        // backface_culling: glium::BackfaceCullingMode::CullClockwise,
+//         backface_culling: glium::BackfaceCullingMode::CullingDisabled,
+//         backface_culling: glium::BackfaceCullingMode::CullClockwise,
+         backface_culling: glium::BackfaceCullingMode::CullCounterClockwise,
         .. Default::default()
     };
-
+    let mut rotate_cubes: bool = false;
     while !closed {
 
         let mut target = display.draw();
         target.clear_color(0.01, 0.01, 0.01, 1.0);
 
-        let eye  = Point3::new(0.0, 0.0, 0.0);
+        let eye  = Point3::new(f32::cos(d)*0.1, f32::sin(d)*0.1, 0.0);
         let view:  Matrix4<f32> = Isometry3::look_at_rh(&eye, &targ, &Vector3::y()).to_homogeneous();
 
-        for cube in cubes.iter_mut() {            
-            // if cube.get_type() ==  {
-            //     cube.rotate(d, d/2.0, d/3.0);
-            // }
-            // match cube.get_type() {
-            //     CubeType::Block => {
-            //         cube.rotate(d, 0.0, 0.0);
-            //         println!("{:?}", cube.get_rotation());
-            //     },
-            //     _ => ()
-            // };
-                   
+        for cube in cubes.iter_mut() {
+
+            if rotate_cubes {
+                match cube.get_type() {
+                    CubeType::Block => {
+                        cube.rotate(f32::cos(d), f32::sin(d), d);
+                    },
+                    _ => ()
+                };
+            }
             
             let uniforms = uniform!{
                 window_size: dimensions,
@@ -119,15 +119,16 @@ fn main() {
                         dimensions[0] = size.width  as f32;
                         dimensions[1] = size.height as f32;
                     },
-                    // glutin::WindowEvent::KeyboardInput{} => match event {
-                    //     _ => println!("{:?}", event)
-                    // }
+                     glutin::WindowEvent::KeyboardInput{device_id, input} => match input.scancode {
+                         19 => { rotate_cubes = !rotate_cubes; },
+                         _ => println!("{:?}", input)
+                     }
                     _ => ()
                 },
                 _ => (),
             }
         });
-        d += 0.001;
+        d += 0.01;
     }
 
 }

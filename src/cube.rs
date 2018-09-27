@@ -90,17 +90,17 @@ impl Cube {
 }
 
 fn get_normal(index: usize) -> (f32, f32, f32) {
-    let normals: [(f32, f32, f32); 6] = [
-        (0.0, 0.0, -1.0),
-        (0.0, 0.0, 1.0),
+    match index {
+        0 => (0.0, 0.0, -1.0),
+        1 => (0.0, 0.0, 1.0),
 
-        (-1.0, 0.0, 0.0),
-        (1.0, 0.0, 0.0),
+        2 => (-1.0, 0.0, 0.0),
+        3 => (1.0, 0.0, 0.0),
 
-        (0.0, -1.0, 0.0),
-        (0.0, 1.0, 0.0),
-    ];
-    normals[index]
+        4 => (0.0, -1.0, 0.0),
+        5 => (0.0, 1.0, 0.0),
+        _ => (0.0, 0.0, 0.0)
+    }
 }
 
 fn get_cube_verts() -> Vec<Vertex> {
@@ -110,7 +110,8 @@ fn get_cube_verts() -> Vec<Vertex> {
     let y:  f32 =  1.0;
 
     vec![
-        //1
+        // back
+
         Vertex::new(-x, -y, nz, get_normal(0)),
         Vertex::new( x, -y, nz, get_normal(0)),
         Vertex::new( x,  y, nz, get_normal(0)),
@@ -118,7 +119,8 @@ fn get_cube_verts() -> Vec<Vertex> {
         Vertex::new(-x,  y, nz, get_normal(0)),
         Vertex::new(-x, -y, nz, get_normal(0)),
 
-        //3
+        // front
+
         Vertex::new(-x, -y, pz, get_normal(1)),
         Vertex::new( x, -y, pz, get_normal(1)),
         Vertex::new( x,  y, pz, get_normal(1)),
@@ -126,36 +128,40 @@ fn get_cube_verts() -> Vec<Vertex> {
         Vertex::new(-x,  y, pz, get_normal(1)),
         Vertex::new(-x, -y, pz, get_normal(1)),
 
-        //5
-        Vertex::new(-x,  y, pz, get_normal(2)),
-        Vertex::new(-x,  y, nz, get_normal(2)),
-        Vertex::new(-x, -y, nz, get_normal(2)),
-        Vertex::new(-x, -y, nz, get_normal(2)),
-        Vertex::new(-x, -y, pz, get_normal(2)),
-        Vertex::new(-x,  y, pz, get_normal(2)),
+        //right side
 
-        //7
-        Vertex::new( x,  y, pz, get_normal(3)),
-        Vertex::new( x,  y, nz, get_normal(3)),
-        Vertex::new( x, -y, nz, get_normal(3)),
-        Vertex::new( x, -y, nz, get_normal(3)),
-        Vertex::new( x, -y, pz, get_normal(3)),
-        Vertex::new( x,  y, pz, get_normal(3)),
+//        Vertex::new(-x,  y, pz, get_normal(2)),
+//        Vertex::new(-x,  y, nz, get_normal(2)),
+//        Vertex::new(-x, -y, nz, get_normal(2)),
+//        Vertex::new(-x, -y, nz, get_normal(2)),
+//        Vertex::new(-x, -y, pz, get_normal(2)),
+//        Vertex::new(-x,  y, pz, get_normal(2)),
 
-        //9
+        // left side
+
+//        Vertex::new( x,  y, pz, get_normal(3)),
+//        Vertex::new( x,  y, nz, get_normal(3)),
+//        Vertex::new( x, -y, nz, get_normal(3)),
+//        Vertex::new( x, -y, nz, get_normal(3)),
+//        Vertex::new( x, -y, pz, get_normal(3)),
+//        Vertex::new( x,  y, pz, get_normal(3)),
+
+        // top
+
         Vertex::new(-x, -y, nz, get_normal(4)),
-        Vertex::new( x, -y, nz, get_normal(4)),
-        Vertex::new( x, -y, pz, get_normal(4)),
-        Vertex::new( x, -y, pz, get_normal(4)),
         Vertex::new(-x, -y, pz, get_normal(4)),
+        Vertex::new( x, -y, pz, get_normal(4)),
+        Vertex::new( x, -y, pz, get_normal(4)),
+        Vertex::new( x, -y, nz, get_normal(4)),
         Vertex::new(-x, -y, nz, get_normal(4)),
 
-        //11
+        // bottom
+
         Vertex::new(-x,  y, nz, get_normal(5)),
-        Vertex::new( x,  y, nz, get_normal(5)),
-        Vertex::new( x,  y, pz, get_normal(5)),
-        Vertex::new( x,  y, pz, get_normal(5)),
         Vertex::new(-x,  y, pz, get_normal(5)),
+        Vertex::new( x,  y, pz, get_normal(5)),
+        Vertex::new( x,  y, pz, get_normal(5)),
+        Vertex::new( x,  y, nz, get_normal(5)),
         Vertex::new(-x,  y, nz, get_normal(5))
     ]
 }
