@@ -1,6 +1,6 @@
 [package]
 name = "put_the_cube_on_my_screen"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Joseph Melton <jcmmelton@gmail.com>"]
 
 [dependencies]
@@ -11,3 +11,4 @@ shader_version = "*"
 glutin = "*"
 gl = "*"
 nalgebra = "0.16"
+camera_controllers = "*"

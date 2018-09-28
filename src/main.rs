@@ -4,13 +4,14 @@ extern crate shader_version;
 extern crate glutin_window;
 extern crate gl;
 extern crate nalgebra as na;
+extern crate camera_controllers;
 
 
 mod vertex;
 mod cube;
 
 use glium::*;
-use na::{Matrix4, geometry, Vector3, Isometry3, Point3, Perspective3};
+use na::{Matrix4, geometry, Vector3, Vector2, Isometry3, Point3, Perspective3};
 use std::f32;
 use vertex::Vertex;
 use cube::*;
@@ -25,26 +26,39 @@ fn main() {
     let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
 
-    let light_position: (f32, f32, f32) = (-5.0, 0.0, 18.0);
+    let light_position: (f32, f32, f32) = (0.0, 10.0, 5.0);
     let mut cubes: Vec<Cube> = Vec::new();
-    cubes.push(Cube::new(
-        CubeType::Block,
-        Vector3::new(5.0, 0.0, 10.0),
-        &display
-    ));
-    cubes.push(Cube::new(
-        CubeType::Block,
-        Vector3::new(-5.0, 5.0, 12.0),
-        &display
-    ));
-    cubes.push(Cube::new(
-        CubeType::Block,
-        Vector3::new(0.0, 5.0, 26.0),
-        &display
-    ));
+    for i in -5..5 {
+        for j in -5..5 {
+            let fi = i as f32;
+            let fj = j as f32;
+            cubes.push(Cube::new(
+                CubeType::Block,
+                Vector3::new(fi*2.0, fj*2.0, 10.0),
+                [f32::abs(1.0/fi), f32::abs(1.0/fj), 0.3],
+                &display
+            ));
+        }
+    }
+    // cubes.push(Cube::new(
+    //     CubeType::Block,
+    //     Vector3::new(2.0, -1.0, 10.0),
+    //     &display
+    // ));
+    // cubes.push(Cube::new(
+    //     CubeType::Block,
+    //     Vector3::new(0.0, 0.0, 10.0),
+    //     &display
+    // ));
+    // cubes.push(Cube::new(
+    //     CubeType::Block,
+    //     Vector3::new(-2.0, 1.0, 10.0),
+    //     &display
+    // ));
     cubes.push(Cube::new(
         CubeType::Light,
         Vector3::new(light_position.0, light_position.1, light_position.2),
+        [1.0, 1.0, 1.0],
         &display
     ));
 
@@ -59,6 +73,23 @@ fn main() {
     let light_program: Program = glium::Program::from_source(&display, light_vertex_shader_src, light_fragment_shader_src, None).unwrap();
 
     let projection = geometry::Perspective3::new(dimensions[0]/dimensions[1], f32::consts::PI/2.0, 0.1, 1000.0);
+
+
+    // let player_pos = [0.0, 0.0, 0.0];
+    // let player_yaw = 0.0;
+    // let player_pitch = 0.0;
+    // let mut first_person_settings = camera_controllers::FirstPersonSettings::keyboard_wasd();
+    // first_person_settings.mouse_sensitivity_horizontal = 0.5;
+    // first_person_settings.mouse_sensitivity_vertical = 0.5;
+    // first_person_settings.speed_horizontal = 8.0;
+    // first_person_settings.speed_vertical = 4.0;
+    // let mut first_person = camera_controllers::FirstPerson::new(
+    //     player_pos,
+    //     first_person_settings
+    // );
+    // first_person.yaw = f32::consts::PI - player_yaw / 180.0 * f32::consts::PI;
+    // first_person.pitch = player_pitch / 180.0 * f32::consts::PI;
+
 
     let mut closed = false;
     let mut d: f32 = 0.001;
@@ -78,6 +109,7 @@ fn main() {
         .. Default::default()
     };
     let mut rotate_cubes: bool = false;
+    let mut mouse_position: Vector2<f32> = Vector2::new(0.0, 0.0);
 
     while !closed {
 
@@ -91,7 +123,9 @@ fn main() {
             if rotate_cubes {
                 match cube.get_type() {
                     CubeType::Block => {
-                        cube.rotate(f32::cos(d), f32::sin(d), d);
+                        let f = 1.0 + f32::sqrt( f32::powf(cube.get_x_pos(), 2.0) + f32::powf(cube.get_y_pos(), 2.0));
+                        // cube.rotate(f32::cos(d), f32::sin(d), d/f);
+                        cube.move_location(Vector3::new(0.0, 0.0, f32::sin(d+f)/100.0));
                     },
                     _ => ()
                 };
@@ -103,7 +137,7 @@ fn main() {
                 view:        na4_to_gl4(&view),
                 projection:  na4_to_gl4(&projection.as_matrix()),
                 lightColor:  light_color,
-                objectColor: object_color,
+                objectColor: cube.get_color(),
                 lightPos:    light_position,
             };
             let program = match cube.get_type() {
@@ -140,16 +174,23 @@ fn main() {
                             targ.x += 0.1;
                         },
                         Some(glutin::VirtualKeyCode::R) => {
-
+                            rotate_cubes = !rotate_cubes;
                         },
                         _ => println!("{:?}", input)
+                    }
+                    glutin::WindowEvent::CursorMoved{device_id, position, modifiers} => match position {
+                        _ => {
+                            mouse_position.x = position.x as f32;
+                            mouse_position.y = position.y as f32;
+                        }
                     }
                     _ => ()
                 },
                 _ => (),
             }
+        // first_person.event(&event);
         });
-        d += 0.001;
+        d += 0.01;
     }
 
 }
