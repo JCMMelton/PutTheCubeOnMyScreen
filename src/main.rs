@@ -16,6 +16,9 @@ use std::f32;
 use vertex::Vertex;
 use cube::*;
 
+/*
+    TODO: Convert window and events handling to piston so the first person camera class can work nice and easy
+*/
 
 fn main() {
     use glium::{glutin, Surface};
@@ -25,6 +28,7 @@ fn main() {
     window.window.dimensions = Some(glutin::dpi::LogicalSize::new(dimensions[0] as f64, dimensions[1] as f64));
     let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
+    display.gl_window().hide_cursor(true);
 
     let light_position: (f32, f32, f32) = (0.0, 10.0, 5.0);
     let cube_iter = 10;
@@ -42,21 +46,6 @@ fn main() {
             ));
         }
     }
-    // cubes.push(Cube::new(
-    //     CubeType::Block,
-    //     Vector3::new(2.0, -1.0, 10.0),
-    //     &display
-    // ));
-    // cubes.push(Cube::new(
-    //     CubeType::Block,
-    //     Vector3::new(0.0, 0.0, 10.0),
-    //     &display
-    // ));
-    // cubes.push(Cube::new(
-    //     CubeType::Block,
-    //     Vector3::new(-2.0, 1.0, 10.0),
-    //     &display
-    // ));
     cubes.push(Cube::new(
         CubeType::Light,
         Vector3::new(light_position.0, light_position.1, light_position.2),
@@ -178,6 +167,9 @@ fn main() {
                         },
                         Some(glutin::VirtualKeyCode::R) => {
                             rotate_cubes = !rotate_cubes;
+                        },
+                        Some(glutin::VirtualKeyCode::Escape) => {
+                            closed = true;
                         },
                         _ => println!("{:?}", input)
                     }
