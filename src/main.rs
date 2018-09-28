@@ -33,6 +33,16 @@ fn main() {
         &display
     ));
     cubes.push(Cube::new(
+        CubeType::Block,
+        Vector3::new(-5.0, 5.0, 12.0),
+        &display
+    ));
+    cubes.push(Cube::new(
+        CubeType::Block,
+        Vector3::new(0.0, 5.0, 26.0),
+        &display
+    ));
+    cubes.push(Cube::new(
         CubeType::Light,
         Vector3::new(light_position.0, light_position.1, light_position.2),
         &display
@@ -62,13 +72,9 @@ fn main() {
     let params = glium::DrawParameters {
         depth: glium::Depth {
             test: glium::DepthTest::IfLessOrEqual,
-           // test: glium::DepthTest::IfMoreOrEqual,
             write: true,
             .. Default::default()
         },
-//         backface_culling: glium::BackfaceCullingMode::CullingDisabled,
-        // backface_culling: glium::BackfaceCullingMode::CullClockwise,
-         // backface_culling: glium::BackfaceCullingMode::CullCounterClockwise,
         .. Default::default()
     };
     let mut rotate_cubes: bool = false;
@@ -116,13 +122,28 @@ fn main() {
                         dimensions[0] = size.width  as f32;
                         dimensions[1] = size.height as f32;
                     },
-                     glutin::WindowEvent::KeyboardInput{device_id, input} => match input.virtual_keycode {
-                        W => { eye.z += 0.1; targ.z += 0.1; },
-                        S => { eye.z -= 0.1; targ.z -= 0.1; },
-                        D => { eye.x -= 0.1; targ.x -= 0.1; },
-                        A => { eye.x += 0.1; targ.x += 0.1; },
-                         _ => println!("{:?}", input)
-                     }
+                    glutin::WindowEvent::KeyboardInput{device_id, input} => match input.virtual_keycode {
+                        Some(glutin::VirtualKeyCode::W) => {
+                            eye.z  += 0.1;
+                            targ.z += 0.1;
+                        }
+                        Some(glutin::VirtualKeyCode::S) => {
+                            eye.z  -= 0.1;
+                            targ.z -= 0.1;
+                        },
+                        Some(glutin::VirtualKeyCode::D) => {
+                            eye.x  -= 0.1;
+                            targ.x -= 0.1;
+                        },
+                        Some(glutin::VirtualKeyCode::A) => {
+                            eye.x  += 0.1;
+                            targ.x += 0.1;
+                        },
+                        Some(glutin::VirtualKeyCode::R) => {
+
+                        },
+                        _ => println!("{:?}", input)
+                    }
                     _ => ()
                 },
                 _ => (),
