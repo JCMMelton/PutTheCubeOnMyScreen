@@ -27,15 +27,17 @@ fn main() {
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
 
     let light_position: (f32, f32, f32) = (0.0, 10.0, 5.0);
+    let cube_iter = 10;
     let mut cubes: Vec<Cube> = Vec::new();
-    for i in -5..5 {
-        for j in -5..5 {
+    for i in -cube_iter..cube_iter {
+        for j in -cube_iter..cube_iter {
             let fi = i as f32;
             let fj = j as f32;
             cubes.push(Cube::new(
                 CubeType::Block,
-                Vector3::new(fi*2.0, fj*2.0, 10.0),
+                Vector3::new(fi*1.0, fj*1.0, 10.0),
                 [f32::abs(1.0/fi), f32::abs(1.0/fj), 0.3],
+                0.5,
                 &display
             ));
         }
@@ -59,6 +61,7 @@ fn main() {
         CubeType::Light,
         Vector3::new(light_position.0, light_position.1, light_position.2),
         [1.0, 1.0, 1.0],
+        1.0,
         &display
     ));
 
@@ -124,7 +127,7 @@ fn main() {
                 match cube.get_type() {
                     CubeType::Block => {
                         let f = 1.0 + f32::sqrt( f32::powf(cube.get_x_pos(), 2.0) + f32::powf(cube.get_y_pos(), 2.0));
-                        // cube.rotate(f32::cos(d), f32::sin(d), d/f);
+                        cube.rotate(f32::cos(d), f32::sin(d), d/f);
                         cube.move_location(Vector3::new(0.0, 0.0, f32::sin(d+f)/100.0));
                     },
                     _ => ()

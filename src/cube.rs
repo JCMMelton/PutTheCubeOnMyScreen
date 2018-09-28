@@ -17,16 +17,19 @@ pub struct Cube {
     rotation: Matrix4<f32>,
     vertex_buffer: VertexBuffer<Vertex>,
     translation: geometry::Translation3<f32>,
-    color: [f32; 3]
+    color: [f32; 3],
+    size: f32
 }
 
 impl Cube {
-    pub fn new(cube_type: CubeType, location: Vector3<f32>, color: [f32; 3], display: &backend::Facade) -> Self {
-        let shape: Vec<Vertex> = get_cube_verts();
+    pub fn new(cube_type: CubeType, location: Vector3<f32>, color: [f32; 3], size: f32, display: &backend::Facade) -> Self {
+        let size = f32::min(size, 1.0);
+        let shape: Vec<Vertex> = get_cube_verts(size);
         Cube {
             cube_type,
             location,
             color,
+            size,
             rotation: Matrix4::new(
                 1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,
@@ -121,11 +124,11 @@ fn get_normal(index: usize) -> (f32, f32, f32) {
     }
 }
 
-fn get_cube_verts() -> Vec<Vertex> {
-    let nz: f32 = -1.0;
-    let pz: f32 =  1.0;
-    let x:  f32 =  1.0;
-    let y:  f32 =  1.0;
+fn get_cube_verts(size: f32) -> Vec<Vertex> {
+    let nz: f32 = -size;
+    let pz: f32 =  size;
+    let x:  f32 =  size;
+    let y:  f32 =  size;
 
     vec![
         // back
