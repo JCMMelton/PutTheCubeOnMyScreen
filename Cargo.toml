@@ -5,10 +5,9 @@ authors = ["Joseph Melton <jcmmelton@gmail.com>"]
 
 [dependencies]
 glium = "*"
-piston = "*"
 pistoncore-glutin_window = "*"
 shader_version = "*"
 glutin = "*"
 gl = "*"
 nalgebra = "0.16"
-camera_controllers = "*"
+nalgebra-glm = "0.1"
