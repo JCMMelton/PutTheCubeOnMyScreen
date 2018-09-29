@@ -15,6 +15,7 @@ pub struct Cube {
     cube_type: CubeType,
     location: Vector3<f32>,
     rotation: Matrix4<f32>,
+    scale: Matrix4<f32>,
     vertex_buffer: VertexBuffer<Vertex>,
     translation: geometry::Translation3<f32>,
     color: [f32; 3],
@@ -34,6 +35,12 @@ impl Cube {
                 1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,
                 0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ),
+            scale : Matrix4::new(
+                size, 0.0, 0.0, 0.0,
+                0.0, size, 0.0, 0.0,
+                0.0, 0.0, size, 0.0,
                 0.0, 0.0, 0.0, 1.0
             ),
             vertex_buffer: glium::VertexBuffer::new(display, &shape).unwrap(),
@@ -73,12 +80,7 @@ impl Cube {
     }
 
     pub fn get_scale(&self) -> Matrix4<f32> {
-        Matrix4::new(
-            self.size, 0.0, 0.0, 0.0,
-            0.0, self.size, 0.0, 0.0,
-            0.0, 0.0, self.size, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        )
+        self.scale
     }
 
     pub fn get_color(&self) -> [f32; 3] {
