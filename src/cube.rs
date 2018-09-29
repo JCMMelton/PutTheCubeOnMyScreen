@@ -24,7 +24,7 @@ pub struct Cube {
 impl Cube {
     pub fn new(cube_type: CubeType, location: Vector3<f32>, color: [f32; 3], size: f32, display: &backend::Facade) -> Self {
         let size = f32::min(size, 1.0);
-        let shape: Vec<Vertex> = get_cube_verts(size);
+        let shape: Vec<Vertex> = get_cube_verts(1.0);
         Cube {
             cube_type,
             location,
@@ -68,6 +68,19 @@ impl Cube {
 
     }
 
+    pub fn get_size(&self) -> f32 {
+        self.size
+    }
+
+    pub fn get_scale(&self) -> Matrix4<f32> {
+        Matrix4::new(
+            self.size, 0.0, 0.0, 0.0,
+            0.0, self.size, 0.0, 0.0,
+            0.0, 0.0, self.size, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        )
+    }
+
     pub fn get_color(&self) -> [f32; 3] {
         self.color
     }
@@ -106,7 +119,7 @@ impl Cube {
     }
 
     pub fn get_model_transform(&self) -> Matrix4<f32> {
-        Isometry3::<f32>::new(Vector3::x(), na::zero()).to_homogeneous() * self.get_location_transform().to_homogeneous() * self.get_rotation()
+        Isometry3::<f32>::new(Vector3::x(), na::zero()).to_homogeneous() * self.get_location_transform().to_homogeneous() * self.get_scale() * self.get_rotation()
     }
 }
 

@@ -11,10 +11,9 @@ mod vertex;
 mod cube;
 
 use glium::*;
-use na::{Matrix4, geometry, Vector3, Vector2, Isometry3, Point3, Perspective3, Rotation3};
+use na::{Matrix4, geometry, Vector3, Vector2};
 use glm::*;
 use std::f32;
-use vertex::Vertex;
 use cube::*;
 
 /*
@@ -71,11 +70,7 @@ fn main() {
     let mut closed = false;
     let mut d: f32 = 0.001;
 
-    let mut targ = Point3::new(0.0, 0.0, 1.0);
-    let mut eye  = Point3::new(0.0, 0.0, 0.0);
-
     let light_color:  [f32; 3] = [1.0, 1.0, 1.0];
-    let object_color: [f32; 3] = [1.0, 0.5, 0.3];
 
     let params = glium::DrawParameters {
         depth: glium::Depth {
@@ -86,7 +81,6 @@ fn main() {
         .. Default::default()
     };
     let mut rotate_cubes: bool = false;
-    let mut mouse_position: Vector2<f32> = Vector2::new(0.0, 0.0);
     let mut mouse_offset: Vector2<f32> = Vector2::new(0.0, 0.0);
     let mouse_sensitivity: f32 = 0.5;
     let mut pitch: f32 = 0.0;
@@ -160,7 +154,7 @@ fn main() {
         event_loop.poll_events(|event| {
             match event {
                 glutin::Event::DeviceEvent { event, ..} => match event {
-                    glutin::DeviceEvent::MouseMotion{delta}  => match delta {
+                    glutin::DeviceEvent::MouseMotion{ delta }  => match delta {
                         _ => {
                             mouse_offset.x = ( delta.0 as f32) * mouse_sensitivity;
                             mouse_offset.y = (-delta.1 as f32) * mouse_sensitivity;
@@ -174,7 +168,7 @@ fn main() {
                         dimensions[0] = size.width  as f32;
                         dimensions[1] = size.height as f32;
                     },
-                    glutin::WindowEvent::KeyboardInput{device_id, input} => match input.virtual_keycode {
+                    glutin::WindowEvent::KeyboardInput{ input, .. } => match input.virtual_keycode {
                         Some(glutin::VirtualKeyCode::W) => {
                             camera_pos += camera_speed * camera_front;
                         },
