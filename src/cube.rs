@@ -72,7 +72,6 @@ impl Cube {
                 0.0, 0.0, 1.0, 0.0,
                 0.0, 0.0, 0.0, 1.0
             )
-
     }
 
     pub fn get_size(&self) -> f32 {
@@ -105,7 +104,7 @@ impl Cube {
 
     pub fn move_location(&mut self, move_vector: Vector3<f32>) {
         self.location += move_vector;
-        self.translation= geometry::Translation3::from_vector(self.location)
+        self.translation = geometry::Translation3::from_vector(self.location)
     }
 
     pub fn get_rotation(&self) -> &Matrix4<f32> {

@@ -9,12 +9,14 @@ extern crate nalgebra_glm as glm;
 
 mod vertex;
 mod cube;
+mod input;
 
 use glium::*;
 use na::{Matrix4, geometry, Vector3, Vector2};
 use glm::*;
 use std::f32;
 use cube::*;
+use input::*;
 
 /*
     TODO: Convert window and events handling to piston so the first person camera class can work nice and easy
@@ -30,21 +32,27 @@ fn main() {
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
     display.gl_window().hide_cursor(true);
 
-    let light_position: (f32, f32, f32) = (0.0, 0.0, 15.0);
+    let light_position: (f32, f32, f32) = (0.0, 0.0, 0.0);
     let cube_iter = 10;
     let mut cubes: Vec<Cube> = Vec::new();
+    let cube_resolution = 1.0;
     for i in -cube_iter..cube_iter {
         for j in -cube_iter..cube_iter {
-            let fi = i as f32;
-            let fj = j as f32;
-            let hp = 1.0/hypot(fi, fj);
-            cubes.push(Cube::new(
-                CubeType::Block,
-                Vector3::new(fi*1.0, fj*1.0, 10.0),
-                [hp, hp, 0.3],
-                0.5,
-                &display
-            ));
+            for k in -cube_iter..cube_iter {
+                let fi = i as f32;
+                let fj = j as f32;
+                let fk = k as f32;
+                let hpi = 1.0/(0.1+hypot(fi, fj));
+                let hpj = 1.0/(0.1+hypot(fk, fj));
+                let hpk = 1.0/(0.1+hypot(fi, fk));
+                cubes.push(Cube::new(
+                    CubeType::Block,
+                    Vector3::new(fi*cube_resolution, fj*cube_resolution, 0.0+(fk*cube_resolution)),
+                    [hpi, hpj, hpk],
+                    cube_resolution*0.5,
+                    &display
+                ));
+            }
         }
     }
     cubes.push(Cube::new(
@@ -67,6 +75,7 @@ fn main() {
 
     let projection = geometry::Perspective3::new(dimensions[0]/dimensions[1], f32::consts::PI/2.0, 0.1, 1000.0);
 
+    let expl = 10.0;
     let mut closed = false;
     let mut d: f32 = 0.001;
 
@@ -84,17 +93,18 @@ fn main() {
     let mut mouse_offset: Vector2<f32> = Vector2::new(0.0, 0.0);
     let mouse_sensitivity: f32 = 0.5;
     let mut pitch: f32 = 0.0;
-    let mut yaw: f32 = 0.0;
+    let mut yaw: f32 = 90.0;
 
     let camera_speed: f32 = 1.0;
-    let mut camera_pos = glm::vec3(0.0, 0.0, 3.0);
-    let mut camera_front = glm::vec3(0.0, 0.0, 1.0);
+    let mut camera_pos = glm::vec3(0.0, 0.0, 20.0);
     let camera_up  = glm::vec3(0.0, 1.0, 0.0);
+
+    let mut input_holder: Input = Input::new();
 
     while !closed {
 
         let mut target = display.draw();
-        target.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
+        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
 
         yaw   += mouse_offset.x;
         pitch += mouse_offset.y;
@@ -110,7 +120,7 @@ fn main() {
             f32::sin(radianize(&pitch)),
             f32::sin(radianize(&yaw)) * f32::cos(radianize(&pitch))
         );
-        camera_front = glm::normalize(&front);
+        let camera_front = glm::normalize(&front);
 
         let view = glm::look_at(
             &camera_pos,
@@ -123,9 +133,14 @@ fn main() {
             if rotate_cubes {
                 match cube.get_type() {
                     CubeType::Block => {
-                        let f = 1.0 + hypot(cube.get_x_pos(),cube.get_y_pos());
-                        cube.rotate(f32::cos(d), f32::sin(d), d/f);
-                        cube.move_location(Vector3::new(0.0, 0.0, f32::sin(d+f)/100.0));
+                        let hxy = 1.0 + hypot(cube.get_x_pos(), cube.get_y_pos());
+                        let hxz = 1.0 + hypot(cube.get_z_pos(), cube.get_x_pos());
+                        let hyz = 1.0 + hypot(cube.get_z_pos(), cube.get_y_pos());
+                        cube.rotate(f32::cos(d), f32::sin(d), d/hxy);
+//                        cube.move_location(Vector3::new(0.0, 0.0, f32::sin(d+hxy)/100.0));
+//                        cube.move_location(Vector3::new(f32::sin(d+hyz)/10.0, f32::cos(d+hxz)/10.0, f32::sin(d+hxy)/10.0));
+                        cube.move_location(Vector3::new(f32::sin(d+hyz)/expl, f32::sin(d+hxz)/expl, f32::sin(d+hxy)/expl));
+//                        cube.move_location(Vector3::new( f32::sin(d*hyz)/expl, f32::sin(d*hxz)/expl, f32::sin(d*hxy)/expl ));
                     },
                     _ => ()
                 };
@@ -168,32 +183,52 @@ fn main() {
                         dimensions[0] = size.width  as f32;
                         dimensions[1] = size.height as f32;
                     },
-                    glutin::WindowEvent::KeyboardInput{ input, .. } => match input.virtual_keycode {
-                        Some(glutin::VirtualKeyCode::W) => {
-                            camera_pos += camera_speed * camera_front;
-                        },
-                        Some(glutin::VirtualKeyCode::S) => {
-                            camera_pos -= camera_speed * camera_front;
-                        },
-                        Some(glutin::VirtualKeyCode::D) => {
-                            camera_pos += glm::normalize(&glm::cross::<f32, U3>(&camera_front, &camera_up)) * camera_speed;
-                        },
-                        Some(glutin::VirtualKeyCode::A) => {
-                            camera_pos -= glm::normalize(&glm::cross::<f32, U3>(&camera_front, &camera_up)) * camera_speed;
-                        },
-                        Some(glutin::VirtualKeyCode::R) => {
-                            rotate_cubes = !rotate_cubes;
-                        },
-                        Some(glutin::VirtualKeyCode::Escape) => {
+                    glutin::WindowEvent::KeyboardInput{ input, .. } => {
+                        let latch = match input.state {
+                            glutin::ElementState::Pressed  => true,
+                            glutin::ElementState::Released => false
+                        };
+                        if input.virtual_keycode == Some(glutin::VirtualKeyCode::W) {
+                            input_holder.forward = latch;
+                        }
+                        else if input.virtual_keycode == Some(glutin::VirtualKeyCode::S) {
+                            input_holder.backward = latch;
+                        }
+                        if input.virtual_keycode == Some(glutin::VirtualKeyCode::D) {
+                            input_holder.right = latch;
+                        }
+                        else if input.virtual_keycode == Some(glutin::VirtualKeyCode::A) {
+                            input_holder.left = latch;
+                        }
+                        if input.virtual_keycode == Some(glutin::VirtualKeyCode::Space) {
+                            input_holder.up = latch;
+                        }
+                        if input.virtual_keycode == Some(glutin::VirtualKeyCode::R) {
+                            input_holder.rotate = latch;
+                            rotate_cubes = true;
+                        }
+                        if input.virtual_keycode == Some(glutin::VirtualKeyCode::Escape) {
                             closed = true;
-                        },
-                        _ => println!("{:?}", input)
+                        }
+//                        println!("{:?}", input)
                     }
                     _ => ()
                 },
                 _ => (),
             }
         });
+        if input_holder.forward {
+            camera_pos += camera_speed * camera_front;
+        }
+        if input_holder.backward {
+            camera_pos -= camera_speed * camera_front;
+        }
+        if input_holder.right {
+            camera_pos += glm::normalize(&glm::cross::<f32, U3>(&camera_front, &camera_up)) * camera_speed;
+        }
+        if input_holder.left {
+            camera_pos -= glm::normalize(&glm::cross::<f32, U3>(&camera_front, &camera_up)) * camera_speed;
+        }
         d += 0.01;
     }
 
