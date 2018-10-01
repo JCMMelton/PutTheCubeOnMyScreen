@@ -38,37 +38,39 @@ fn main() {
     let mut dimensions: [f32; 2] = [800.0, 600.0];
     let mut event_loop = glutin::EventsLoop::new();
 
-    let monitor = event_loop.get_available_monitors().nth(2);
+    // let monitor = event_loop.get_available_monitors().nth(1);
 
-    let mut window = glutin::WindowBuilder::new().with_fullscreen(monitor);
+    let mut window = glutin::WindowBuilder::new();//.with_fullscreen(monitor);
     window.window.dimensions = Some(glutin::dpi::LogicalSize::new(dimensions[0] as f64, dimensions[1] as f64));
     let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
     display.gl_window().hide_cursor(true);
-    display.gl_window().grab_cursor(true);
+    //display.gl_window().grab_cursor(true);
 
     let mut world = World::<f32>::new();
     world.set_gravity(Vector3::new(0.0, 0.0, 0.0));
     let mut world_force = WorldForce::new(Vec::new());
-    let mut implode = Implosion::new(Vec::new(), Point3::new(0.0, 0.0, 0.0));
+    let mut implode = Implosion::new(Vec::new(), Point3::new(0.0, 0.0, 0.0), 6.0);
+    let mut planet  = Implosion::new(Vec::new(), Point3::new(20.0, 20.0, 20.0), 15.0);
+    let mut planet2  = Implosion::new(Vec::new(), Point3::new(-20.0, -20.0, -20.0), 15.0);
     let geom = ShapeHandle::new(Cuboid::new(Vector3::repeat(0.5-COLLIDER_MARGIN)));
     let inertia = geom.inertia(1.1);
     let center_of_mass = geom.center_of_mass();
 
     let light_position: (f32, f32, f32) = (0.0, 0.0, 0.0);
-    let cube_iter = 4;
+    let cube_iter = 15;
     let mut cubes: Vec<Cubody> = Vec::new();
     let cube_resolution = 1.0;
     for i in -cube_iter..cube_iter {
         for j in -cube_iter..cube_iter {
-            for k in -cube_iter..cube_iter {
+            for k in 0..1 {
                 let fi = i as f32;
                 let fj = j as f32;
                 let fk = k as f32;
                 let hpi = 1.0/(0.1+hypot(fi, fj));
                 let hpj = 1.0/(0.1+hypot(fk, fj));
                 let hpk = 1.0/(0.1+hypot(fi, fk));
-                let location: Vector3<f32> = Vector3::new(fi*cube_resolution, fj*cube_resolution, 0.0+(fk*cube_resolution));
+                let location: Vector3<f32> = Vector3::new(fi*cube_resolution, fj*cube_resolution, 0.0 + (fk*cube_resolution));
                 let pos = Isometry3::new(location, na::zero());
                 let handle = world.add_rigid_body(pos, inertia, center_of_mass);
                 cubes.push(
@@ -92,12 +94,16 @@ fn main() {
                 );
                 world_force.add_body_part(handle);
                 implode.add_body_part(handle);
+                planet.add_body_part(handle);
+                planet2.add_body_part(handle);
             }
         }
     }
 
     world.add_force_generator(world_force);
     world.add_force_generator(implode);
+    world.add_force_generator(planet);
+    world.add_force_generator(planet2);
 //    cubes.push(Cube::new(
 //        CubeType::Light,
 //        Vector3::new(light_position.0, light_position.1, light_position.2),

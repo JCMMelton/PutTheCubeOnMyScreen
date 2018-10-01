@@ -3,7 +3,7 @@ use nphysics3d::force_generator::ForceGenerator;
 use nphysics3d::object::{BodyHandle, BodySet};
 use nphysics3d::math::Velocity;
 use nphysics3d::algebra::Force3;
-use na::{Point3, Vector6};
+use na::{Point3, Vector3, Vector6, Matrix1x3};
 
 use std::f32;
 use cubody::*;
@@ -37,7 +37,9 @@ impl ForceGenerator<f32> for WorldForce {
                 let hxz = 0.1 + f32::sqrt(f32::powi(x, 2) + f32::powi(z, 2));
                 let hyz = 0.1 + f32::sqrt(f32::powi(y, 2) + f32::powi(z, 2));
                 let force = &Force3::from_vector(
-                    &Vector6::new(f32::sin(self.timer+hxy)/1.0, f32::sin(self.timer+hxz)/1.0, f32::sin(self.timer+hyz)/1.0, 0.0, 0.0, 0.0)
+                    &Vector6::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+                    // &Vector6::new(f32::cos(self.timer+hxy)/1.0, f32::sin(self.timer+hxy)/1.0, 0.0, 0.0, 0.0, 0.0)
+                    // &Vector6::new(0.0, 0.0, f32::sin(self.timer+hxy)/1.0, f32::cos(self.timer), f32::sin(self.timer), 0.0)
                 );
                 part.apply_force(&force);
             }
@@ -48,14 +50,16 @@ impl ForceGenerator<f32> for WorldForce {
 }
 pub struct Implosion {
     parts: Vec<BodyHandle>,
-    center: Point3<f32>
+    center: Point3<f32>,
+    strength: f32
 }
 
 impl Implosion {
-    pub fn new(parts: Vec<BodyHandle>, center: Point3<f32>) -> Self {
+    pub fn new(parts: Vec<BodyHandle>, center: Point3<f32>, strength: f32) -> Self {
         Implosion {
             parts,
-            center
+            center,
+            strength
         }
     }
     pub fn add_body_part(&mut self, body: BodyHandle) {
@@ -69,7 +73,8 @@ impl ForceGenerator<f32> for Implosion {
             if bodies.contains(*handle) {
                 let mut part = bodies.body_part_mut(*handle);
                 let delta_pos = part.as_ref().center_of_mass() - self.center;
-                let force = Force3::linear(delta_pos * -0.2);
+                let mag = 0.001 + f32::sqrt(f32::powi(delta_pos[0], 2) + f32::powi(delta_pos[1], 2) + f32::powi(delta_pos[2], 2));
+                let force = Force3::linear(delta_pos  * -(self.strength * (1.0/f32::powi(mag, 2))) ) ;
                 part.apply_force(&force);
             }
         }
