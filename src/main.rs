@@ -38,9 +38,9 @@ fn main() {
     let mut dimensions: [f32; 2] = [800.0, 600.0];
     let mut event_loop = glutin::EventsLoop::new();
 
-    // let monitor = event_loop.get_available_monitors().nth(1);
+     let monitor = event_loop.get_available_monitors().nth(1);
 
-    let mut window = glutin::WindowBuilder::new();//.with_fullscreen(monitor);
+    let mut window = glutin::WindowBuilder::new().with_fullscreen(monitor);
     window.window.dimensions = Some(glutin::dpi::LogicalSize::new(dimensions[0] as f64, dimensions[1] as f64));
     let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
@@ -50,20 +50,20 @@ fn main() {
     let mut world = World::<f32>::new();
     world.set_gravity(Vector3::new(0.0, 0.0, 0.0));
     let mut world_force = WorldForce::new(Vec::new());
-    let mut implode = Implosion::new(Vec::new(), Point3::new(0.0, 0.0, 0.0), 6.0);
-    let mut planet  = Implosion::new(Vec::new(), Point3::new(20.0, 20.0, 20.0), 15.0);
-    let mut planet2  = Implosion::new(Vec::new(), Point3::new(-20.0, -20.0, -20.0), 15.0);
+    let mut implode = Attractor::new(Vec::new(), Point3::new(0.0, 0.0, 0.0), 6.0);
+    let mut planet  = Attractor::new(Vec::new(), Point3::new(0.0, 30.0, 0.0), 105.0);
+    let mut planet2 = Attractor::new(Vec::new(), Point3::new(0.0, -50.0, 0.0), 150.0);
     let geom = ShapeHandle::new(Cuboid::new(Vector3::repeat(0.5-COLLIDER_MARGIN)));
     let inertia = geom.inertia(1.1);
     let center_of_mass = geom.center_of_mass();
 
     let light_position: (f32, f32, f32) = (0.0, 0.0, 0.0);
-    let cube_iter = 15;
+    let cube_iter = 10;
     let mut cubes: Vec<Cubody> = Vec::new();
     let cube_resolution = 1.0;
     for i in -cube_iter..cube_iter {
         for j in -cube_iter..cube_iter {
-            for k in 0..1 {
+            for k in -0..1 {
                 let fi = i as f32;
                 let fj = j as f32;
                 let fk = k as f32;
@@ -101,7 +101,7 @@ fn main() {
     }
 
     world.add_force_generator(world_force);
-    world.add_force_generator(implode);
+//    world.add_force_generator(implode);
     world.add_force_generator(planet);
     world.add_force_generator(planet2);
 //    cubes.push(Cube::new(

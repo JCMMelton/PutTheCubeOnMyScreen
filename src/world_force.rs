@@ -3,7 +3,7 @@ use nphysics3d::force_generator::ForceGenerator;
 use nphysics3d::object::{BodyHandle, BodySet};
 use nphysics3d::math::Velocity;
 use nphysics3d::algebra::Force3;
-use na::{Point3, Vector3, Vector6, Matrix1x3};
+use na::{Point3, Vector3, Vector6, Matrix1x3, Matrix4};
 
 use std::f32;
 use cubody::*;
@@ -48,15 +48,15 @@ impl ForceGenerator<f32> for WorldForce {
         true
     }
 }
-pub struct Implosion {
+pub struct Attractor {
     parts: Vec<BodyHandle>,
     center: Point3<f32>,
     strength: f32
 }
 
-impl Implosion {
+impl Attractor {
     pub fn new(parts: Vec<BodyHandle>, center: Point3<f32>, strength: f32) -> Self {
-        Implosion {
+        Attractor {
             parts,
             center,
             strength
@@ -67,7 +67,7 @@ impl Implosion {
     }
 }
 
-impl ForceGenerator<f32> for Implosion {
+impl ForceGenerator<f32> for Attractor {
     fn apply(&mut self, _: &IntegrationParameters<f32>, bodies: &mut BodySet<f32>) -> bool {
         for handle in &self.parts {
             if bodies.contains(*handle) {
