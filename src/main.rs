@@ -38,9 +38,9 @@ fn main() {
     let mut dimensions: [f32; 2] = [800.0, 600.0];
     let mut event_loop = glutin::EventsLoop::new();
 
-     let monitor = event_loop.get_available_monitors().nth(1);
+    // let monitor = event_loop.get_available_monitors().nth(1);
 
-    let mut window = glutin::WindowBuilder::new().with_fullscreen(monitor);
+    let mut window = glutin::WindowBuilder::new();//.with_fullscreen(monitor);
     window.window.dimensions = Some(glutin::dpi::LogicalSize::new(dimensions[0] as f64, dimensions[1] as f64));
     let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
@@ -50,9 +50,9 @@ fn main() {
     let mut world = World::<f32>::new();
     world.set_gravity(Vector3::new(0.0, 0.0, 0.0));
     let mut world_force = WorldForce::new(Vec::new());
-    let mut implode = Attractor::new(Vec::new(), Point3::new(0.0, 0.0, 0.0), 6.0);
-    let mut planet  = Attractor::new(Vec::new(), Point3::new(0.0, 30.0, 0.0), 105.0);
-    let mut planet2 = Attractor::new(Vec::new(), Point3::new(0.0, -50.0, 0.0), 150.0);
+    let mut implode = Attractor::new(Vec::new(), Point3::new(0.0, 0.0, 0.0), 6.0, Vector3::new(0.0, 0.0, 0.0));
+    let mut planet  = Attractor::new(Vec::new(), Point3::new(0.0, 30.0, 0.0), 105.0, Vector3::new(0.0, 0.0, 0.0));
+    let mut planet2 = Attractor::new(Vec::new(), Point3::new(0.0, -50.0, 0.0), 150.0, Vector3::new(0.001, 0.0, 0.001));
     let geom = ShapeHandle::new(Cuboid::new(Vector3::repeat(0.5-COLLIDER_MARGIN)));
     let inertia = geom.inertia(1.1);
     let center_of_mass = geom.center_of_mass();
@@ -100,7 +100,7 @@ fn main() {
         }
     }
 
-    world.add_force_generator(world_force);
+    // world.add_force_generator(world_force);
 //    world.add_force_generator(implode);
     world.add_force_generator(planet);
     world.add_force_generator(planet2);
@@ -184,18 +184,18 @@ fn main() {
             
             let uniforms = uniform!{
                 window_size: dimensions,
+                lightColor:  light_color,
+                lightPos:    light_position,
                 model:       na4_to_gl4(&cubody.cube.get_model_transform()),
                 view:        na4_to_gl4(&view),
                 projection:  na4_to_gl4(&projection.as_matrix()),
-                lightColor:  light_color,
                 objectColor: cubody.cube.get_color(),
-                lightPos:    light_position,
             };
-            let program = match cubody.cube.get_type() {
-                &CubeType::Block => &block_program,
-                &CubeType::Light => &light_program
-            };
-            target.draw(cubody.cube.get_vert_buffer(), &indices, program, &uniforms, &params).unwrap();
+            // let program = match cubody.cube.get_type() {
+            //     &CubeType::Block => &block_program,
+            //     &CubeType::Light => &light_program
+            // };
+            target.draw(cubody.cube.get_vert_buffer(), &indices, &block_program, &uniforms, &params).unwrap();
         }
         target.finish().unwrap();
 
@@ -264,6 +264,9 @@ fn main() {
         }
         if input_holder.left {
             camera_pos -= glm::normalize(&glm::cross::<f32, U3>(&camera_front, &camera_up)) * camera_speed;
+        }
+        if input_holder.up {
+            camera_pos += camera_speed * camera_up;
         }
         world.step();
         d += 0.01;

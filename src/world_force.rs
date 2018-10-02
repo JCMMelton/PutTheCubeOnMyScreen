@@ -3,7 +3,7 @@ use nphysics3d::force_generator::ForceGenerator;
 use nphysics3d::object::{BodyHandle, BodySet};
 use nphysics3d::math::Velocity;
 use nphysics3d::algebra::Force3;
-use na::{Point3, Vector3, Vector6, Matrix1x3, Matrix4};
+use na::{Point3, Vector3, Vector6, Matrix1x3, Matrix3x1, Matrix4, Rotation3};
 
 use std::f32;
 use cubody::*;
@@ -51,15 +51,17 @@ impl ForceGenerator<f32> for WorldForce {
 pub struct Attractor {
     parts: Vec<BodyHandle>,
     center: Point3<f32>,
-    strength: f32
+    strength: f32,
+    rotation: Rotation3<f32>
 }
 
 impl Attractor {
-    pub fn new(parts: Vec<BodyHandle>, center: Point3<f32>, strength: f32) -> Self {
+    pub fn new(parts: Vec<BodyHandle>, center: Point3<f32>, strength: f32, angles: Vector3<f32>) -> Self {
         Attractor {
             parts,
             center,
-            strength
+            strength,
+            rotation: Rotation3::new(angles)
         }
     }
     pub fn add_body_part(&mut self, body: BodyHandle) {
@@ -69,10 +71,11 @@ impl Attractor {
 
 impl ForceGenerator<f32> for Attractor {
     fn apply(&mut self, _: &IntegrationParameters<f32>, bodies: &mut BodySet<f32>) -> bool {
+        self.center = self.rotation * self.center;
         for handle in &self.parts {
             if bodies.contains(*handle) {
                 let mut part = bodies.body_part_mut(*handle);
-                let delta_pos = part.as_ref().center_of_mass() - self.center;
+                let delta_pos: Vector3<f32> = part.as_ref().center_of_mass() - self.center;
                 let mag = 0.001 + f32::sqrt(f32::powi(delta_pos[0], 2) + f32::powi(delta_pos[1], 2) + f32::powi(delta_pos[2], 2));
                 let force = Force3::linear(delta_pos  * -(self.strength * (1.0/f32::powi(mag, 2))) ) ;
                 part.apply_force(&force);
