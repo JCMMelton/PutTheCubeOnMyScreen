@@ -4,7 +4,9 @@ use nphysics3d::object::{BodyHandle, BodySet};
 use nphysics3d::math::Velocity;
 use nphysics3d::algebra::Force3;
 use na::{Point3, Vector3, Vector6, Matrix1x3, Matrix3x1, Matrix4, Rotation3};
+extern crate nalgebra_glm as glm;
 
+use glm::angle;
 use std::f32;
 use cubody::*;
 
@@ -33,11 +35,13 @@ impl ForceGenerator<f32> for WorldForce {
                 let x = part.as_ref().position().translation.vector.x;
                 let y = part.as_ref().position().translation.vector.y;
                 let z = part.as_ref().position().translation.vector.z;
-                let hxy = 0.1 + f32::sqrt(f32::powi(x, 2) + f32::powi(y, 2));
-                let hxz = 0.1 + f32::sqrt(f32::powi(x, 2) + f32::powi(z, 2));
-                let hyz = 0.1 + f32::sqrt(f32::powi(y, 2) + f32::powi(z, 2));
+//                let hxy = 0.1 + f32::sqrt(f32::powi(x, 2) + f32::powi(y, 2));
+//                let hxz = 0.1 + f32::sqrt(f32::powi(x, 2) + f32::powi(z, 2));
+//                let hyz = 0.1 + f32::sqrt(f32::powi(y, 2) + f32::powi(z, 2));
+                let f = f32::powi(f32::sin(self.timer), 4)*0.1*f32::sin(self.timer/2.0);
                 let force = &Force3::from_vector(
-                    &Vector6::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+                    &Vector6::new(x*f, y*f, z*f, 0.0, 0.0, 0.0)
+//                    &Vector6::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
                     // &Vector6::new(f32::cos(self.timer+hxy)/1.0, f32::sin(self.timer+hxy)/1.0, 0.0, 0.0, 0.0, 0.0)
                     // &Vector6::new(0.0, 0.0, f32::sin(self.timer+hxy)/1.0, f32::cos(self.timer), f32::sin(self.timer), 0.0)
                 );

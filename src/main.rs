@@ -7,6 +7,7 @@ extern crate nalgebra as na;
 extern crate nalgebra_glm as glm;
 extern crate ncollide3d;
 extern crate nphysics3d;
+extern crate rayon;
 
 
 mod vertex;
@@ -15,6 +16,8 @@ mod input;
 mod cubody;
 mod world_force;
 
+use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
 use glium::*;
 use na::{Matrix4, geometry, Vector3, Vector6, Vector2, Isometry3, Point3};
 use glm::*;
@@ -38,9 +41,9 @@ fn main() {
     let mut dimensions: [f32; 2] = [800.0, 600.0];
     let mut event_loop = glutin::EventsLoop::new();
 
-    // let monitor = event_loop.get_available_monitors().nth(1);
+     let monitor = event_loop.get_available_monitors().nth(1);
 
-    let mut window = glutin::WindowBuilder::new();//.with_fullscreen(monitor);
+    let mut window = glutin::WindowBuilder::new().with_fullscreen(monitor);
     window.window.dimensions = Some(glutin::dpi::LogicalSize::new(dimensions[0] as f64, dimensions[1] as f64));
     let context = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display: Display = glium::Display::new(window, context, &event_loop).unwrap();
@@ -49,21 +52,21 @@ fn main() {
 
     let mut world = World::<f32>::new();
     world.set_gravity(Vector3::new(0.0, 0.0, 0.0));
-    let mut world_force = WorldForce::new(Vec::new());
-    let mut implode = Attractor::new(Vec::new(), Point3::new(0.0, 0.0, 0.0), 6.0, Vector3::new(0.0, 0.0, 0.0));
-    let mut planet  = Attractor::new(Vec::new(), Point3::new(0.0, 30.0, 0.0), 105.0, Vector3::new(0.0, 0.0, 0.0));
-    let mut planet2 = Attractor::new(Vec::new(), Point3::new(0.0, -50.0, 0.0), 150.0, Vector3::new(0.001, 0.0, 0.001));
+//    let mut world_force = WorldForce::new(Vec::new());
+//    let mut implode = Attractor::new(Vec::new(), Point3::new(0.0, 0.0, 0.0), 6.0, Vector3::new(0.0, 0.0, 0.0));
+    let mut planet  = Attractor::new(Vec::new(), Point3::new(0.0, 100.0, 0.0), 500.0, Vector3::new(10.0, 100.0, 10.0));
+//    let mut planet2 = Attractor::new(Vec::new(), Point3::new(0.0, -80.0, 0.0), 150.0, Vector3::new(0.001, 0.002, 0.001));
     let geom = ShapeHandle::new(Cuboid::new(Vector3::repeat(0.5-COLLIDER_MARGIN)));
     let inertia = geom.inertia(1.1);
     let center_of_mass = geom.center_of_mass();
 
     let light_position: (f32, f32, f32) = (0.0, 0.0, 0.0);
-    let cube_iter = 10;
+    let cube_iter = 5;
     let mut cubes: Vec<Cubody> = Vec::new();
     let cube_resolution = 1.0;
     for i in -cube_iter..cube_iter {
         for j in -cube_iter..cube_iter {
-            for k in -0..1 {
+            for k in -cube_iter..cube_iter {
                 let fi = i as f32;
                 let fj = j as f32;
                 let fk = k as f32;
@@ -79,8 +82,7 @@ fn main() {
                             CubeType::Block,
                             pos,
                             [hpi, hpj, hpk],
-                            cube_resolution*0.5,
-                            &display
+                            cube_resolution*0.5
                         ),
                         handle
                     )
@@ -92,18 +94,18 @@ fn main() {
                     Isometry3::identity(),
                     Material::default()
                 );
-                world_force.add_body_part(handle);
-                implode.add_body_part(handle);
+//                world_force.add_body_part(handle);
+//                implode.add_body_part(handle);
                 planet.add_body_part(handle);
-                planet2.add_body_part(handle);
+//                planet2.add_body_part(handle);
             }
         }
     }
 
-    // world.add_force_generator(world_force);
+//     world.add_force_generator(world_force);
 //    world.add_force_generator(implode);
     world.add_force_generator(planet);
-    world.add_force_generator(planet2);
+//    world.add_force_generator(planet2);
 //    cubes.push(Cube::new(
 //        CubeType::Light,
 //        Vector3::new(light_position.0, light_position.1, light_position.2),
@@ -149,6 +151,12 @@ fn main() {
     let camera_up  = glm::vec3(0.0, 1.0, 0.0);
 
     let mut input_holder: Input = Input::new();
+//    let cube_count = cubes.len();
+//    let arc_cubes = Arc::new(Mutex::new(cubes));
+//    let arc_program = Arc::new(Mutex::new(block_program));
+//    let arc_params = Arc::new(Mutex::new(params));
+    let cube_verts = glium::VertexBuffer::new(&display, &cube::get_cube_verts(1.0)).unwrap();
+
 
     while !closed {
 
@@ -191,11 +199,7 @@ fn main() {
                 projection:  na4_to_gl4(&projection.as_matrix()),
                 objectColor: cubody.cube.get_color(),
             };
-            // let program = match cubody.cube.get_type() {
-            //     &CubeType::Block => &block_program,
-            //     &CubeType::Light => &light_program
-            // };
-            target.draw(cubody.cube.get_vert_buffer(), &indices, &block_program, &uniforms, &params).unwrap();
+            target.draw(&cube_verts, &indices, &block_program, &uniforms, &params).unwrap();
         }
         target.finish().unwrap();
 
