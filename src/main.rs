@@ -172,10 +172,12 @@ fn main() {
             pitch = -89.0;
         }
 
+        let r_pitch: f32 = radianize(&pitch);
+        let r_yaw: f32 = radianize(&yaw);
         let front = glm::vec3(
-            f32::cos(radianize(&yaw)) * f32::cos(radianize(&pitch)),
-            f32::sin(radianize(&pitch)),
-            f32::sin(radianize(&yaw)) * f32::cos(radianize(&pitch))
+            f32::cos(r_yaw) * f32::cos(r_pitch),
+            f32::sin(r_pitch),
+            f32::sin(r_yaw) * f32::cos(r_pitch)
         );
         let camera_front = glm::normalize(&front);
 

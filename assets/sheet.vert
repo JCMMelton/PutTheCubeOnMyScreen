@@ -18,7 +18,10 @@ float hypot(float p1, float p2) {
 }
 
 void main() {
-    vec3 n_pos = vec3(position.xy, 0.01*sin(50.0*hypot(position.x, position.y)-t1) );
+    float z1 = 0.01*sin(50.0*hypot(position.x, position.y+0.15)-t1);
+    float z2 = 0.01*sin(50.0*hypot(position.x, position.y-0.15)+t1);
+    float z = z1+z2;
+    vec3 n_pos = vec3(position.xy,  z);
     gl_Position = projection * view * model * vec4(n_pos, 1.0);
     FragPos = vec3(model * vec4(n_pos, 1.0));
     Normal = mat3(transpose(inverse(model))) * normal;

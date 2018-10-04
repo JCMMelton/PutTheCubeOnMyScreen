@@ -74,7 +74,7 @@ fn main() {
     let camera_up  = glm::vec3(0.0, 1.0, 0.0);
 
     let mut input_holder: Input = Input::new();
-    let sheet_verts = glium::VertexBuffer::new(&display, &shapes::get_sheet_verts(30)).unwrap();
+    let sheet_verts = glium::VertexBuffer::new(&display, &shapes::get_sheet_verts(60)).unwrap();
     let mut t1: f32 = 0.0;
     let mut t2: f32 = 0.0;
 
@@ -91,11 +91,12 @@ fn main() {
         if pitch < -89.0 {
             pitch = -89.0;
         }
-
+        let r_pitch: f32 = radianize(&pitch);
+        let r_yaw: f32 = radianize(&yaw);
         let front = glm::vec3(
-            f32::cos(radianize(&yaw)) * f32::cos(radianize(&pitch)),
-            f32::sin(radianize(&pitch)),
-            f32::sin(radianize(&yaw)) * f32::cos(radianize(&pitch))
+            f32::cos(r_yaw) * f32::cos(r_pitch),
+            f32::sin(r_pitch),
+            f32::sin(r_yaw) * f32::cos(r_pitch)
         );
         let camera_front = glm::normalize(&front);
 
