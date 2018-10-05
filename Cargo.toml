@@ -11,6 +11,10 @@ path = "src/main.rs"
 name = "alt"
 path = "src/alt.rs"
 
+[[bin]]
+name = "cube_world"
+path = "src/cube_world.rs"
+
 [dependencies]
 glium = "*"
 pistoncore-glutin_window = "*"
@@ -22,3 +26,4 @@ nalgebra-glm = "0.1"
 ncollide3d = "0.17"
 nphysics3d = "0.9"
 rayon = "1.0.2"
+noise = "*"
